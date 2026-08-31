@@ -3,26 +3,57 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Roster Checker</title>
+  <title>Student Council Attendance Checker</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
   <style>
     * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-    body { max-width: 600px; margin: 40px auto; padding: 0 20px; color: #333; }
-    .upload-box { border: 2px dashed #bbb; border-radius: 8px; padding: 30px; text-align: center; background: #fafafa; }
+    body { max-width: 650px; margin: 40px auto; padding: 0 20px; color: #333; background: #fdfdfd; }
+    h2 { margin-bottom: 6px; }
+    .subtitle { color: #666; font-size: 0.95rem; margin-top: 0; margin-bottom: 24px; }
+    
+    .upload-box { border: 2px dashed #bbb; border-radius: 8px; padding: 30px; text-align: center; background: #fafafa; transition: border-color 0.2s; }
+    .upload-box:hover { border-color: #0070f3; }
     input[type="file"] { display: none; }
-    .btn { display: inline-block; background: #0070f3; color: white; padding: 10px 20px; border-radius: 6px; font-weight: 500; cursor: pointer; border: none; font-size: 1rem; }
+    .btn { display: inline-block; background: #0070f3; color: white; padding: 10px 20px; border-radius: 6px; font-weight: 500; cursor: pointer; border: none; font-size: 1rem; transition: background 0.2s; }
     .btn:hover { background: #0051a2; }
+    .btn-secondary { background: #6c757d; }
+    .btn-secondary:hover { background: #5a6268; }
+    .btn-email { background: #d93025; }
+    .btn-email:hover { background: #b31d14; }
+    
     .filename { margin-top: 10px; color: #666; font-size: 0.9rem; }
+    
+    .stats-container { display: flex; gap: 12px; margin-top: 24px; }
+    .stat-card { flex: 1; background: #fff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 14px; text-align: center; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+    .stat-value { font-size: 1.5rem; font-weight: 700; color: #111; margin-top: 4px; }
+    .stat-label { font-size: 0.8rem; color: #666; text-transform: uppercase; letter-spacing: 0.5px; }
+    
     .results-header { display: flex; justify-content: space-between; align-items: center; margin-top: 30px; }
-    ul { list-style: none; padding: 0; margin-top: 10px; }
-    li { padding: 10px 14px; border-bottom: 1px solid #eee; font-size: 0.95rem; font-weight: 500; }
+    .results-header h3 { margin: 0; }
+    
+    ul { list-style: none; padding: 0; margin-top: 12px; border: 1px solid #eee; border-radius: 8px; overflow: hidden; }
+    li { padding: 12px 16px; border-bottom: 1px solid #eee; font-size: 0.95rem; font-weight: 500; display: flex; justify-content: space-between; align-items: center; background: #fff; }
+    li:last-child { border-bottom: none; }
+    
+    /* Modal / Overlay Styles */
+    .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; justify-content: center; align-items: center; }
+    .modal-content { background: #fff; width: 90%; max-width: 550px; border-radius: 10px; padding: 24px; max-height: 85vh; display: flex; flex-direction: column; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
+    .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; border-bottom: 1px solid #eee; padding-bottom: 12px; }
+    .modal-header h3 { margin: 0; }
+    .modal-body { overflow-y: auto; flex: 1; margin-bottom: 16px; border: 1px solid #eee; border-radius: 6px; padding: 8px; }
+    .modal-footer { display: flex; justify-content: flex-end; gap: 10px; }
+    
+    .checkbox-item { display: flex; align-items: center; padding: 8px; border-bottom: 1px solid #f5f5f5; cursor: pointer; }
+    .checkbox-item:hover { background: #f8f9fa; }
+    .checkbox-item input { margin-right: 12px; transform: scale(1.2); cursor: pointer; }
+    
     footer { margin-top: 40px; text-align: center; font-size: 0.85rem; color: #888; }
   </style>
 </head>
 <body>
 
-  <h2>Student Council Roster Checker</h2>
-  <p style="color: #666; font-size: 0.95rem;">Upload any file (including a full 10th-grade list) to automatically see which Student Council members were absent.</p>
+  <h2>Student Council Attendance Checker</h2>
+  <p class="subtitle">Upload attendance CSV files to automatically check missing Student Council members.</p>
   
   <div class="upload-box">
     <label for="csvFileInput" class="btn">Choose CSV File</label>
@@ -30,11 +61,42 @@
     <div id="fileName" class="filename">No file selected</div>
   </div>
 
-  <div class="results-header">
-    <h3>Missing Stuco Members (<span id="count">0</span>)</h3>
+  <div class="stats-container" id="statsSection" style="display: none;">
+    <div class="stat-card">
+      <div class="stat-label">Present</div>
+      <div class="stat-value" id="statPresent" style="color: #2e7d32;">0</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Missing</div>
+      <div class="stat-value" id="statMissing" style="color: #d93025;">0</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Attendance Rate</div>
+      <div class="stat-value" id="statRate" style="color: #0070f3;">0%</div>
+    </div>
+  </div>
+
+  <div class="results-header" id="resultsHeader" style="display: none;">
+    <h3>Missing Members (<span id="count">0</span>)</h3>
+    <button class="btn btn-email" id="openEmailModalBtn">Email Missing Members</button>
   </div>
   
   <ul id="results"></ul>
+
+  <!-- Email Modal Overlay -->
+  <div class="modal-overlay" id="emailModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Select Members to Email</h3>
+        <span style="font-size: 0.85rem; color: #666;">Uncheck anyone present or excused</span>
+      </div>
+      <div class="modal-body" id="modalChecklist"></div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+        <button class="btn btn-email" onclick="sendGmail()">Open in Gmail</button>
+      </div>
+    </div>
+  </div>
 
   <footer>Created By Yahli</footer>
 
@@ -335,6 +397,7 @@
     "email": "layla.noble@vhhscougars.org"
   }
 ];
+    let currentMissingMembers = [];
 
     const fileInput = document.getElementById('csvFileInput');
     const fileNameDiv = document.getElementById('fileName');
@@ -364,7 +427,8 @@
         return cleanStr(row);
       });
 
-      const missing = [];
+      currentMissingMembers = [];
+      let presentCount = 0;
 
       masterList.forEach(member => {
         const mFirst = cleanStr(member.first);
@@ -394,27 +458,86 @@
           }
         }
 
-        if (!found) {
-          missing.push(member.name);
+        if (found) {
+          presentCount++;
+        } else {
+          currentMissingMembers.push(member);
         }
       });
 
+      // Update Visual Indicators
+      const totalMembers = masterList.length;
+      const missingCount = currentMissingMembers.length;
+      const rate = Math.round((presentCount / totalMembers) * 100);
+
+      document.getElementById('statPresent').textContent = presentCount;
+      document.getElementById('statMissing').textContent = missingCount;
+      document.getElementById('statRate').textContent = rate + '%';
+      document.getElementById('statsSection').style.display = 'flex';
+
+      // Update List
       const resultsUl = document.getElementById('results');
       resultsUl.innerHTML = '';
-      document.getElementById('count').textContent = missing.length;
+      document.getElementById('count').textContent = missingCount;
+      document.getElementById('resultsHeader').style.display = 'flex';
 
-      if (missing.length === 0) {
+      if (missingCount === 0) {
         const li = document.createElement('li');
         li.textContent = 'All 49 Student Council members are present!';
         li.style.color = '#2e7d32';
         resultsUl.appendChild(li);
+        document.getElementById('openEmailModalBtn').style.display = 'none';
       } else {
-        missing.forEach(name => {
+        document.getElementById('openEmailModalBtn').style.display = 'inline-block';
+        currentMissingMembers.forEach(member => {
           const li = document.createElement('li');
-          li.textContent = name;
+          li.innerHTML = `<span>${member.name}</span><span style="font-size: 0.85rem; color: #777;">${member.email}</span>`;
           resultsUl.appendChild(li);
         });
       }
+    }
+
+    // Modal Control
+    document.getElementById('openEmailModalBtn').addEventListener('click', () => {
+      const checklistContainer = document.getElementById('modalChecklist');
+      checklistContainer.innerHTML = '';
+
+      currentMissingMembers.forEach((member, idx) => {
+        const div = document.createElement('label');
+        div.className = 'checkbox-item';
+        div.innerHTML = `
+          <input type="checkbox" value="${member.email}" id="chk_${idx}" checked>
+          <div>
+            <strong>${member.name}</strong>
+            <div style="font-size: 0.8rem; color: #666;">${member.email}</div>
+          </div>
+        `;
+        checklistContainer.appendChild(div);
+      });
+
+      document.getElementById('emailModal').style.display = 'flex';
+    });
+
+    function closeModal() {
+      document.getElementById('emailModal').style.display = 'none';
+    }
+
+    function sendGmail() {
+      const checkboxes = document.querySelectorAll('#modalChecklist input[type="checkbox"]:checked');
+      const selectedEmails = Array.from(checkboxes).map(cb => cb.value);
+
+      if (selectedEmails.length === 0) {
+        alert('Please select at least one student to email.');
+        return;
+      }
+
+      const bccString = selectedEmails.join(',');
+      const subject = encodeURIComponent('Missing Student Council Meeting');
+      const body = encodeURIComponent('Hi,\n\nOur records show that you missed today\'s Student Council meeting. Please reach out if you have an excused absence.\n\nBest,\nStudent Council');
+
+      const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&bcc=${bccString}&su=${subject}&body=${body}`;
+      window.open(gmailUrl, '_blank');
+      closeModal();
     }
   </script>
 </body>
