@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Roster Checker</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
+  <style>
+    * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    body { max-width: 600px; margin: 40px auto; padding: 0 20px; color: #333; }
+    .upload-box { border: 2px dashed #bbb; border-radius: 8px; padding: 30px; text-align: center; background: #fafafa; }
+    input[type="file"] { display: none; }
+    .btn { display: inline-block; background: #0070f3; color: white; padding: 10px 20px; border-radius: 6px; font-weight: 500; cursor: pointer; border: none; font-size: 1rem; }
+    .btn:hover { background: #0051a2; }
+    .filename { margin-top: 10px; color: #666; font-size: 0.9rem; }
+    .results-header { display: flex; justify-content: space-between; align-items: center; margin-top: 30px; }
+    ul { list-style: none; padding: 0; margin-top: 10px; }
+    li { padding: 10px 14px; border-bottom: 1px solid #eee; font-size: 0.95rem; font-weight: 500; }
+    footer { margin-top: 40px; text-align: center; font-size: 0.85rem; color: #888; }
+  </style>
+</head>
+<body>
+
+  <h2>Student Council Roster Checker</h2>
+  <p style="color: #666; font-size: 0.95rem;">Upload any file (including a full 10th-grade list) to automatically see which Student Council members were absent.</p>
+  
+  <div class="upload-box">
+    <label for="csvFileInput" class="btn">Choose CSV File</label>
+    <input type="file" id="csvFileInput" accept=".csv">
+    <div id="fileName" class="filename">No file selected</div>
+  </div>
+
+  <div class="results-header">
+    <h3>Missing Stuco Members (<span id="count">0</span>)</h3>
+  </div>
+  
+  <ul id="results"></ul>
+
+  <footer>Created By Yahli</footer>
+
+  <script>
+    const masterList = [
+  {
+    "name": "Elena Angelova",
+    "first": "elena",
+    "last": "angelova",
+    "email": "elena.angelova@vhhscougars.org"
+  },
+  {
+    "name": "Claire Ayvazian",
+    "first": "claire",
+    "last": "ayvazian",
+    "email": "claire.ayvazian@vhhscougars.org"
+  },
+  {
+    "name": "Jai Beniwal",
+    "first": "jai",
+    "last": "beniwal",
+    "email": "jai.beniwal@vhhscougars.org"
+  },
+  {
+    "name": "Finley Brown",
+    "first": "finley",
+    "last": "brown",
+    "email": "finley.brown@vhhscougars.org"
+  },
+  {
+    "name": "Harper Brownrichards",
+    "first": "harper",
+    "last": "brownrichards",
+    "email": "harper.brownrichards@vhhscougars.org"
+  },
+  {
+    "name": "Kennedy Cohen",
+    "first": "kennedy",
+    "last": "cohen",
+    "email": "kennedy.cohen@vhhscougars.org"
+  },
+  {
+    "name": "Lexi Dove",
+    "first": "lexi",
+    "last": "dove",
+    "email": "lexi.dove@vhhscougars.org"
+  },
+  {
+    "name": "Alyson Eric",
+    "first": "alyson",
+    "last": "eric",
+    "email": "alyson.eric@vhhscougars.org"
+  },
+  {
+    "name": "Caitlyn Feldman",
+    "first": "caitlyn",
+    "last": "feldman",
+    "email": "caitlyn.feldman@vhhscougars.org"
+  },
+  {
+    "name": "Carmelo Ferro",
+    "first": "carmelo",
+    "last": "ferro",
+    "email": "carmelo.ferro@vhhscougars.org"
+  },
+  {
+    "name": "Patricia Fitzgerald",
+    "first": "patricia",
+    "last": "fitzgerald",
+    "email": "patricia.fitzgerald@vhhscougars.org"
+  },
+  {
+    "name": "Noah Gonzalez",
+    "first": "noah",
+    "last": "gonzalez",
+    "email": "noah.gonzalez@vhhscougars.org"
+  },
+  {
+    "name": "Aubree Kaiser",
+    "first": "aubree",
+    "last": "kaiser",
+    "email": "aubree.kaiser@vhhscougars.org"
+  },
+  {
+    "name": "Autumn Kim",
+    "first": "autumn",
+    "last": "kim",
+    "email": "autumn.kim@vhhscougars.org"
+  },
+  {
+    "name": "Aidend Kim",
+    "first": "aidend",
+    "last": "kim",
+    "email": "aidend.kim@vhhscougars.org"
+  },
+  {
+    "name": "Owen Ku",
+    "first": "owen",
+    "last": "ku",
+    "email": "owen.ku@vhhscougars.org"
+  },
+  {
+    "name": "Evelyn Lai",
+    "first": "evelyn",
+    "last": "lai",
+    "email": "evelyn.lai@vhhscougars.org"
+  },
+  {
+    "name": "Ava Leontiev",
+    "first": "ava",
+    "last": "leontiev",
+    "email": "ava.leontiev@vhhscougars.org"
+  },
+  {
+    "name": "Kayla Levy",
+    "first": "kayla",
+    "last": "levy",
+    "email": "kayla.levy@vhhscougars.org"
+  },
+  {
+    "name": "Yahli Marx",
+    "first": "yahli",
+    "last": "marx",
+    "email": "yahli.marx@vhhscougars.org"
+  },
+  {
+    "name": "Bryn Mcauliffe",
+    "first": "bryn",
+    "last": "mcauliffe",
+    "email": "bryn.mcauliffe@vhhscougars.org"
+  },
+  {
+    "name": "Sophie Moustakis",
+    "first": "sophie",
+    "last": "moustakis",
+    "email": "sophie.moustakis@vhhscougars.org"
+  },
+  {
+    "name": "Summer Oneal",
+    "first": "summer",
+    "last": "oneal",
+    "email": "summer.oneal@vhhscougars.org"
+  },
+  {
+    "name": "Lila Parker",
+    "first": "lila",
+    "last": "parker",
+    "email": "lila.parker@vhhscougars.org"
+  },
+  {
+    "name": "Leilany Rackley",
+    "first": "leilany",
+    "last": "rackley",
+    "email": "leilany.rackley@vhhscougars.org"
+  },
+  {
+    "name": "Vanessa Ramirez",
+    "first": "vanessa",
+    "last": "ramirez",
+    "email": "vanessa.ramirez@vhhscougars.org"
+  },
+  {
+    "name": "Viviana Ramirez",
+    "first": "viviana",
+    "last": "ramirez",
+    "email": "viviana.ramirez@vhhscougars.org"
+  },
+  {
+    "name": "Cindy Rodriguez",
+    "first": "cindy",
+    "last": "rodriguez",
+    "email": "cindy.rodriguez@vhhscougars.org"
+  },
+  {
+    "name": "Elliana Russell",
+    "first": "elliana",
+    "last": "russell",
+    "email": "elliana.russell@vhhscougars.org"
+  },
+  {
+    "name": "Dylan Schulman",
+    "first": "dylan",
+    "last": "schulman",
+    "email": "dylan.schulman@vhhscougars.org"
+  },
+  {
+    "name": "Aria Shah",
+    "first": "aria",
+    "last": "shah",
+    "email": "aria.shah@vhhscougars.org"
+  },
+  {
+    "name": "Kendall Sobacki",
+    "first": "kendall",
+    "last": "sobacki",
+    "email": "kendall.sobacki@vhhscougars.org"
+  },
+  {
+    "name": "Clare Song",
+    "first": "clare",
+    "last": "song",
+    "email": "clare.song@vhhscougars.org"
+  },
+  {
+    "name": "Emilia Starr",
+    "first": "emilia",
+    "last": "starr",
+    "email": "emilia.starr@vhhscougars.org"
+  },
+  {
+    "name": "Danna Tellezresendiz",
+    "first": "danna",
+    "last": "tellezresendiz",
+    "email": "danna.tellezresendiz@vhhscougars.org"
+  },
+  {
+    "name": "Mia Thomas",
+    "first": "mia",
+    "last": "thomas",
+    "email": "mia.thomas@vhhscougars.org"
+  },
+  {
+    "name": "Alyssa Vela",
+    "first": "alyssa",
+    "last": "vela",
+    "email": "alyssa.vela@vhhscougars.org"
+  },
+  {
+    "name": "Maged Wali",
+    "first": "maged",
+    "last": "wali",
+    "email": "maged.wali@vhhscougars.org"
+  },
+  {
+    "name": "Paxton Walsh",
+    "first": "paxton",
+    "last": "walsh",
+    "email": "paxton.walsh@vhhscougars.org"
+  },
+  {
+    "name": "Jasmine Wascow",
+    "first": "jasmine",
+    "last": "wascow",
+    "email": "jasmine.wascow@vhhscougars.org"
+  },
+  {
+    "name": "Hope Wesley",
+    "first": "hope",
+    "last": "wesley",
+    "email": "hope.wesley@vhhscougars.org"
+  },
+  {
+    "name": "Carissa Wire",
+    "first": "carissa",
+    "last": "wire",
+    "email": "carissa.wire@vhhscougars.org"
+  },
+  {
+    "name": "Rebecca Yalovetskiy",
+    "first": "rebecca",
+    "last": "yalovetskiy",
+    "email": "rebecca.yalovetskiy@vhhscougars.org"
+  },
+  {
+    "name": "Issac Yun",
+    "first": "issac",
+    "last": "yun",
+    "email": "issac.yun@vhhscougars.org"
+  },
+  {
+    "name": "Cecillia Burt",
+    "first": "cecillia",
+    "last": "burt",
+    "email": "cecillia.burt@vhhscougars.org"
+  },
+  {
+    "name": "Anthony Loredo",
+    "first": "anthony",
+    "last": "loredo",
+    "email": "anthony.loredo@vhhscougars.org"
+  },
+  {
+    "name": "Jayla Wascow",
+    "first": "jayla",
+    "last": "wascow",
+    "email": "jayla.wascow@vhhscougars.org"
+  },
+  {
+    "name": "Skye Newman",
+    "first": "skye",
+    "last": "newman",
+    "email": "skye.newman@vhhscougars.org"
+  },
+  {
+    "name": "Layla Noble",
+    "first": "layla",
+    "last": "noble",
+    "email": "layla.noble@vhhscougars.org"
+  }
+];
+
+    const fileInput = document.getElementById('csvFileInput');
+    const fileNameDiv = document.getElementById('fileName');
+
+    fileInput.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (file) {
+        fileNameDiv.textContent = file.name;
+        Papa.parse(file, {
+          skipEmptyLines: true,
+          complete: (results) => checkMissing(results.data)
+        });
+      }
+    });
+
+    function cleanStr(str) {
+      return String(str || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+    }
+
+    function checkMissing(csvRows) {
+      const rowStrings = csvRows.map(row => {
+        if (Array.isArray(row)) {
+          return cleanStr(row.join(' '));
+        } else if (typeof row === 'object' && row !== null) {
+          return cleanStr(Object.values(row).join(' '));
+        }
+        return cleanStr(row);
+      });
+
+      const missing = [];
+
+      masterList.forEach(member => {
+        const mFirst = cleanStr(member.first);
+        const mLast = cleanStr(member.last);
+        const mEmail = cleanStr(member.email);
+        const mName = cleanStr(member.name);
+
+        const mFirstShort = mFirst.length >= 4 ? mFirst.slice(0, 4) : mFirst;
+        const mLastShort = mLast.length >= 4 ? mLast.slice(0, 4) : mLast;
+
+        let found = false;
+
+        for (const rowText of rowStrings) {
+          if (!rowText) continue;
+
+          if (rowText.includes(mEmail) || rowText.includes(mName)) {
+            found = true;
+            break;
+          }
+
+          const firstMatch = rowText.includes(mFirst) || (mFirstShort && rowText.includes(mFirstShort));
+          const lastMatch = rowText.includes(mLast) || (mLastShort && rowText.includes(mLastShort));
+
+          if (firstMatch && lastMatch) {
+            found = true;
+            break;
+          }
+        }
+
+        if (!found) {
+          missing.push(member.name);
+        }
+      });
+
+      const resultsUl = document.getElementById('results');
+      resultsUl.innerHTML = '';
+      document.getElementById('count').textContent = missing.length;
+
+      if (missing.length === 0) {
+        const li = document.createElement('li');
+        li.textContent = 'All 49 Student Council members are present!';
+        li.style.color = '#2e7d32';
+        resultsUl.appendChild(li);
+      } else {
+        missing.forEach(name => {
+          const li = document.createElement('li');
+          li.textContent = name;
+          resultsUl.appendChild(li);
+        });
+      }
+    }
+  </script>
+</body>
+</html>
