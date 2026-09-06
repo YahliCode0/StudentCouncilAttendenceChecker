@@ -23,13 +23,13 @@
     }
 
     * { box-sizing: border-box; font-family: 'Plus Jakarta Sans', -apple-system, sans-serif; }
-    body { max-width: 680px; margin: 40px auto; padding: 0 20px; color: var(--text-dark); background: var(--bg-body); }
+    body { max-width: 680px; margin: 60px auto; padding: 0 24px; color: var(--text-dark); background: var(--bg-body); }
     
-    h2 { font-weight: 800; font-size: 1.8rem; margin-bottom: 8px; color: var(--text-dark); letter-spacing: -0.5px; }
+    h2 { font-weight: 800; font-size: 2rem; margin-bottom: 16px; color: var(--text-dark); letter-spacing: -0.5px; }
     h3 { font-weight: 700; color: var(--text-dark); letter-spacing: -0.3px; }
-    .subtitle { color: var(--text-muted); font-size: 0.95rem; font-weight: 500; margin-top: 0; margin-bottom: 24px; line-height: 1.5; }
+    .subtitle { color: var(--text-muted); font-size: 0.95rem; font-weight: 500; margin-top: 0; margin-bottom: 32px; line-height: 1.6; }
     
-    .card { background: var(--card-bg); border: 1px solid var(--sand); border-radius: 16px; padding: 28px; margin-bottom: 24px; box-shadow: 0 4px 20px rgba(107, 112, 92, 0.06); }
+    .card { background: var(--card-bg); border: 1px solid var(--sand); border-radius: 16px; padding: 40px; margin-bottom: 32px; box-shadow: 0 4px 20px rgba(107, 112, 92, 0.06); }
     
     .upload-box { 
       border: 2px dashed var(--sage-light); 
@@ -105,18 +105,20 @@
   <div id="authSection" class="card" style="text-align: center;">
     <h2>CheckSync</h2>
     <p class="subtitle">Sign in or create an account to manage your full club list that includes an email list.</p>
-    <a href="https://docs.google.com/document/d/1vrwncAMn1HLO8yFFhBOTURXFofI_DFf9LS5V4J-DCQU/edit?usp=sharing">Read this guide for first-time use</a>
-
     
-    <form id="authForm" onsubmit="return false;" style="max-width: 340px; margin: 0 auto;">
-      <div style="display: flex; flex-direction: column; gap: 14px; margin-bottom: 18px;">
-        <input type="email" id="authEmail" name="username" placeholder="Email address" autocomplete="username" required style="padding: 12px 14px; border: 1px solid var(--sage-light); border-radius: 10px; font-size: 0.95rem; font-weight: 600; background: var(--bg-body);">
-        <input type="password" id="authPassword" name="password" placeholder="Password" autocomplete="current-password" required style="padding: 12px 14px; border: 1px solid var(--sage-light); border-radius: 10px; font-size: 0.95rem; font-weight: 600; background: var(--bg-body);">
+    <div style="margin-bottom: 24px;">
+      <a href="https://docs.google.com/document/d/1vrwncAMn1HLO8yFFhBOTURXFofI_DFf9LS5V4J-DCQU/edit?usp=sharing" target="_blank" rel="noopener noreferrer" style="color: blue; text-decoration: underline; font-weight: 600; font-size: 0.95rem;">Reference this guide for first–time use</a>
+    </div>
+
+    <form id="authForm" onsubmit="return false;" style="max-width: 360px; margin: 0 auto;">
+      <div style="display: flex; flex-direction: column; gap: 24px; margin-top: 24px; margin-bottom: 28px;">
+        <input type="email" id="authEmail" name="username" placeholder="Email address" autocomplete="username" required style="padding: 14px 16px; border: 1px solid var(--sage-light); border-radius: 10px; font-size: 0.95rem; font-weight: 600; background: var(--bg-body);">
+        <input type="password" id="authPassword" name="password" placeholder="Password" autocomplete="current-password" required style="padding: 14px 16px; border: 1px solid var(--sage-light); border-radius: 10px; font-size: 0.95rem; font-weight: 600; background: var(--bg-body);">
       </div>
 
-      <div style="display: flex; gap: 12px; justify-content: center;">
-        <button type="submit" class="btn" id="loginBtn">Log In</button>
-        <button type="button" class="btn btn-secondary" id="signupBtn">Sign Up</button>
+      <div style="display: flex; gap: 20px; justify-content: center;">
+        <button type="submit" class="btn" id="loginBtn" style="padding: 14px 28px;">Log In</button>
+        <button type="button" class="btn btn-secondary" id="signupBtn" style="padding: 14px 28px;">Sign Up</button>
       </div>
     </form>
 
