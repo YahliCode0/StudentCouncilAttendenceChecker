@@ -3,412 +3,427 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Student Council Attendance Checker</title>
+  <title>CheckSync</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
   <style>
-    * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-    body { max-width: 650px; margin: 40px auto; padding: 0 20px; color: #333; background: #fdfdfd; }
-    h2 { margin-bottom: 6px; }
-    .subtitle { color: #666; font-size: 0.95rem; margin-top: 0; margin-bottom: 24px; }
+    :root {
+      --terracotta: #CB997E;
+      --sand: #DDBEA9;
+      --cream: #FFE8D6;
+      --sage-light: #B7B7A4;
+      --sage-mid: #A5A58D;
+      --olive-dark: #6B705C;
+      --text-dark: #2E3328;
+      --text-muted: #646B5C;
+      --card-bg: #FFFFFF;
+      --bg-body: #FAF5F0;
+    }
+
+    * { box-sizing: border-box; font-family: 'Plus Jakarta Sans', -apple-system, sans-serif; }
+    body { max-width: 680px; margin: 40px auto; padding: 0 20px; color: var(--text-dark); background: var(--bg-body); }
     
-    .upload-box { border: 2px dashed #bbb; border-radius: 8px; padding: 30px; text-align: center; background: #fafafa; transition: border-color 0.2s; }
-    .upload-box:hover { border-color: #0070f3; }
+    h2 { font-weight: 800; font-size: 1.8rem; margin-bottom: 8px; color: var(--text-dark); letter-spacing: -0.5px; }
+    h3 { font-weight: 700; color: var(--text-dark); letter-spacing: -0.3px; }
+    .subtitle { color: var(--text-muted); font-size: 0.95rem; font-weight: 500; margin-top: 0; margin-bottom: 24px; line-height: 1.5; }
+    
+    .card { background: var(--card-bg); border: 1px solid var(--sand); border-radius: 16px; padding: 28px; margin-bottom: 24px; box-shadow: 0 4px 20px rgba(107, 112, 92, 0.06); }
+    
+    .upload-box { 
+      border: 2px dashed var(--sage-light); 
+      border-radius: 14px; 
+      padding: 32px 20px; 
+      background: var(--cream); 
+      transition: all 0.25s ease; 
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 14px;
+    }
+    .upload-box:hover { border-color: var(--terracotta); background: #FFF1E6; }
     input[type="file"] { display: none; }
-    .btn { display: inline-block; background: #0070f3; color: white; padding: 10px 20px; border-radius: 6px; font-weight: 500; cursor: pointer; border: none; font-size: 1rem; transition: background 0.2s; }
-    .btn:hover { background: #0051a2; }
-    .btn-secondary { background: #6c757d; }
-    .btn-secondary:hover { background: #5a6268; }
-    .btn-email { background: #d93025; }
-    .btn-email:hover { background: #b31d14; }
     
-    .filename { margin-top: 10px; color: #666; font-size: 0.9rem; }
+    .btn { display: inline-block; background: var(--olive-dark); color: #FFF; padding: 12px 24px; border-radius: 10px; font-weight: 700; cursor: pointer; border: none; font-size: 0.95rem; transition: all 0.2s ease; box-shadow: 0 2px 8px rgba(107, 112, 92, 0.2); }
+    .btn:hover { background: var(--sage-mid); transform: translateY(-1px); }
     
-    .stats-container { display: flex; gap: 12px; margin-top: 24px; }
-    .stat-card { flex: 1; background: #fff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 14px; text-align: center; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
-    .stat-value { font-size: 1.5rem; font-weight: 700; color: #111; margin-top: 4px; }
-    .stat-label { font-size: 0.8rem; color: #666; text-transform: uppercase; letter-spacing: 0.5px; }
+    .btn-secondary { background: var(--sage-light); color: var(--text-dark); padding: 10px 18px; border-radius: 10px; font-weight: 700; cursor: pointer; border: none; transition: background 0.2s; }
+    .btn-secondary:hover { background: var(--sand); }
     
-    .results-header { display: flex; justify-content: space-between; align-items: center; margin-top: 30px; }
-    .results-header h3 { margin: 0; }
+    .btn-email { background: var(--terracotta); color: #FFF; font-weight: 700; box-shadow: 0 2px 8px rgba(203, 153, 126, 0.3); }
+    .btn-email:hover { background: #B8856A; }
     
-    ul { list-style: none; padding: 0; margin-top: 12px; border: 1px solid #eee; border-radius: 8px; overflow: hidden; }
-    li { padding: 12px 16px; border-bottom: 1px solid #eee; font-size: 0.95rem; font-weight: 500; display: flex; justify-content: space-between; align-items: center; background: #fff; }
+    .filename { 
+      color: var(--text-dark); 
+      font-size: 0.88rem; 
+      font-weight: 700; 
+      background: var(--sand);
+      padding: 6px 14px;
+      border-radius: 20px;
+      word-break: break-all;
+      max-width: 90%;
+    }
+    .filename.empty {
+      background: transparent;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+    
+    .stats-container { display: flex; gap: 14px; margin-top: 24px; }
+    .stat-card { flex: 1; background: var(--card-bg); border: 1px solid var(--sand); border-radius: 14px; padding: 16px; text-align: center; box-shadow: 0 2px 10px rgba(107, 112, 92, 0.04); }
+    .stat-value { font-size: 1.7rem; font-weight: 800; color: var(--text-dark); margin-top: 4px; }
+    .stat-label { font-size: 0.78rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.8px; }
+    
+    .results-header { display: flex; justify-content: space-between; align-items: center; margin-top: 32px; }
+    .results-header h3 { margin: 0; font-size: 1.25rem; }
+    
+    ul { list-style: none; padding: 0; margin-top: 14px; border: 1px solid var(--sand); border-radius: 14px; overflow: hidden; background: var(--card-bg); }
+    li { padding: 14px 18px; border-bottom: 1px solid var(--cream); font-size: 0.95rem; font-weight: 600; display: flex; justify-content: space-between; align-items: center; }
     li:last-child { border-bottom: none; }
     
-    /* Modal / Overlay Styles */
-    .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; justify-content: center; align-items: center; }
-    .modal-content { background: #fff; width: 90%; max-width: 550px; border-radius: 10px; padding: 24px; max-height: 85vh; display: flex; flex-direction: column; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
-    .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; border-bottom: 1px solid #eee; padding-bottom: 12px; }
+    .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(46, 51, 40, 0.5); backdrop-filter: blur(3px); z-index: 1000; justify-content: center; align-items: center; }
+    .modal-content { background: var(--card-bg); width: 90%; max-width: 550px; border-radius: 18px; padding: 28px; max-height: 85vh; display: flex; flex-direction: column; box-shadow: 0 12px 32px rgba(0,0,0,0.15); border: 1px solid var(--sand); }
+    .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; border-bottom: 1px solid var(--cream); padding-bottom: 14px; }
     .modal-header h3 { margin: 0; }
-    .modal-body { overflow-y: auto; flex: 1; margin-bottom: 16px; border: 1px solid #eee; border-radius: 6px; padding: 8px; }
-    .modal-footer { display: flex; justify-content: flex-end; gap: 10px; }
+    .modal-body { overflow-y: auto; flex: 1; margin-bottom: 18px; border: 1px solid var(--sand); border-radius: 10px; padding: 10px; background: var(--bg-body); }
+    .modal-footer { display: flex; justify-content: flex-end; gap: 12px; }
     
-    .checkbox-item { display: flex; align-items: center; padding: 8px; border-bottom: 1px solid #f5f5f5; cursor: pointer; }
-    .checkbox-item:hover { background: #f8f9fa; }
-    .checkbox-item input { margin-right: 12px; transform: scale(1.2); cursor: pointer; }
+    .checkbox-item { display: flex; align-items: center; padding: 10px; border-bottom: 1px solid var(--sand); cursor: pointer; border-radius: 8px; transition: background 0.15s; }
+    .checkbox-item:hover { background: var(--cream); }
+    .checkbox-item input { margin-right: 14px; transform: scale(1.2); cursor: pointer; accent-color: var(--terracotta); }
     
-    footer { margin-top: 40px; text-align: center; font-size: 0.85rem; color: #888; }
+    footer { margin-top: 48px; text-align: center; font-size: 0.88rem; font-weight: 600; color: var(--text-muted); letter-spacing: 0.3px; }
+    .auth-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; background: var(--cream); padding: 16px 20px; border-radius: 14px; border: 1px solid var(--sand); }
+    .auth-bar-actions { display: flex; align-items: center; gap: 14px; }
   </style>
 </head>
 <body>
 
-  <h2>Student Council Attendance Checker</h2>
-  <p class="subtitle">Upload attendance CSV files to automatically check missing Student Council members.</p>
-  
-  <div class="upload-box">
-    <label for="csvFileInput" class="btn">Choose CSV File</label>
-    <input type="file" id="csvFileInput" accept=".csv">
-    <div id="fileName" class="filename">No file selected</div>
+  <!-- LOGIN / SIGN UP FORM -->
+  <div id="authSection" class="card" style="text-align: center;">
+    <h2>CheckSync</h2>
+    <p class="subtitle">Sign in or create an account to manage your full club list that includes an email list.</p>
+    
+    <form id="authForm" onsubmit="return false;" style="max-width: 340px; margin: 0 auto;">
+      <div style="display: flex; flex-direction: column; gap: 14px; margin-bottom: 18px;">
+        <input type="email" id="authEmail" name="username" placeholder="Email address" autocomplete="username" required style="padding: 12px 14px; border: 1px solid var(--sage-light); border-radius: 10px; font-size: 0.95rem; font-weight: 600; background: var(--bg-body);">
+        <input type="password" id="authPassword" name="password" placeholder="Password" autocomplete="current-password" required style="padding: 12px 14px; border: 1px solid var(--sage-light); border-radius: 10px; font-size: 0.95rem; font-weight: 600; background: var(--bg-body);">
+      </div>
+
+      <div style="display: flex; gap: 12px; justify-content: center;">
+        <button type="submit" class="btn" id="loginBtn">Log In</button>
+        <button type="button" class="btn btn-secondary" id="signupBtn">Sign Up</button>
+      </div>
+    </form>
+
+    <div id="authError" style="color: #d93025; font-size: 0.88rem; margin-top: 16px; font-weight: 700;"></div>
   </div>
 
-  <div class="stats-container" id="statsSection" style="display: none;">
-    <div class="stat-card">
-      <div class="stat-label">Present</div>
-      <div class="stat-value" id="statPresent" style="color: #2e7d32;">0</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-label">Missing</div>
-      <div class="stat-value" id="statMissing" style="color: #d93025;">0</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-label">Attendance Rate</div>
-      <div class="stat-value" id="statRate" style="color: #0070f3;">0%</div>
+  <!-- ONBOARDING STEP -->
+  <div id="onboardingSection" class="card" style="display: none; text-align: center;">
+    <h2>Welcome! Setup Full Club List</h2>
+    <p class="subtitle">Upload your CSV file containing member emails (e.g. <code>first.last@vhhscougars.org</code>). This creates your full club list that includes an email list saved to your account.</p>
+    
+    <div class="upload-box" style="margin-top: 16px;">
+      <label for="initialRosterInput" class="btn">Upload Full Club List CSV</label>
+      <input type="file" id="initialRosterInput" accept=".csv">
+      <div id="initialRosterName" class="filename empty">No file selected</div>
     </div>
   </div>
 
-  <div class="results-header" id="resultsHeader" style="display: none;">
-    <h3>Missing Members (<span id="count">0</span>)</h3>
-    <button class="btn btn-email" id="openEmailModalBtn">Email Missing Members</button>
-  </div>
-  
-  <ul id="results"></ul>
+  <!-- MAIN APP DASHBOARD -->
+  <div id="appDashboard" style="display: none;">
+    <div class="auth-bar">
+      <div>
+        <span id="userGreeting" style="font-weight: 700; display: block; font-size: 0.95rem;"></span>
+        <span id="rosterCount" style="font-size: 0.85rem; color: var(--olive-dark); font-weight: 700;"></span>
+      </div>
+      <div class="auth-bar-actions">
+        <label for="updateRosterInput" style="font-size: 0.85rem; color: var(--terracotta); cursor: pointer; text-decoration: underline; font-weight: 700;">Update Full Club List</label>
+        <input type="file" id="updateRosterInput" accept=".csv">
+        <button class="btn btn-secondary" id="logoutBtn" style="padding: 8px 14px; font-size: 0.85rem;">Sign Out</button>
+      </div>
+    </div>
 
-  <!-- Email Modal Overlay -->
+    <!-- DAILY ATTENDANCE CHECKER -->
+    <div class="card">
+      <h3 style="margin-top:0;">Daily Attendance Check</h3>
+      <p class="subtitle" style="margin-bottom: 18px;">Upload a 5-Star Students meeting or event CSV export.</p>
+      <div class="upload-box">
+        <label for="csvFileInput" class="btn">Choose 5-Star CSV File</label>
+        <input type="file" id="csvFileInput" accept=".csv">
+        <div id="fileName" class="filename empty">No file selected</div>
+      </div>
+    </div>
+
+    <div class="stats-container" id="statsSection" style="display: none;">
+      <div class="stat-card">
+        <div class="stat-label">Present</div>
+        <div class="stat-value" id="statPresent" style="color: var(--olive-dark);">0</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Missing</div>
+        <div class="stat-value" id="statMissing" style="color: var(--terracotta);">0</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Attendance Rate</div>
+        <div class="stat-value" id="statRate" style="color: var(--text-dark);">0%</div>
+      </div>
+    </div>
+
+    <div class="results-header" id="resultsHeader" style="display: none;">
+      <h3>Missing Members (<span id="count">0</span>)</h3>
+      <button class="btn btn-email" id="openEmailModalBtn">Email Missing Members</button>
+    </div>
+    
+    <ul id="results"></ul>
+  </div>
+
+  <!-- EMAIL MODAL -->
   <div class="modal-overlay" id="emailModal">
     <div class="modal-content">
       <div class="modal-header">
         <h3>Select Members to Email</h3>
-        <span style="font-size: 0.85rem; color: #666;">Uncheck anyone present or excused</span>
+        <span style="font-size: 0.85rem; color: var(--text-muted); font-weight: 600;">Uncheck anyone present or excused</span>
       </div>
       <div class="modal-body" id="modalChecklist"></div>
       <div class="modal-footer">
-        <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
-        <button class="btn btn-email" onclick="sendGmail()">Open in Gmail</button>
+        <button class="btn btn-secondary" id="closeModalBtn">Cancel</button>
+        <button class="btn btn-email" id="sendEmailBtn">Open in Gmail</button>
       </div>
     </div>
   </div>
 
   <footer>Created By Yahli</footer>
 
-  <script>
-    const masterList = [
-  {
-    "name": "Elena Angelova",
-    "first": "elena",
-    "last": "angelova",
-    "email": "elena.angelova@vhhscougars.org"
-  },
-  {
-    "name": "Claire Ayvazian",
-    "first": "claire",
-    "last": "ayvazian",
-    "email": "claire.ayvazian@vhhscougars.org"
-  },
-  {
-    "name": "Jai Beniwal",
-    "first": "jai",
-    "last": "beniwal",
-    "email": "jai.beniwal@vhhscougars.org"
-  },
-  {
-    "name": "Finley Brown",
-    "first": "finley",
-    "last": "brown",
-    "email": "finley.brown@vhhscougars.org"
-  },
-  {
-    "name": "Harper Brownrichards",
-    "first": "harper",
-    "last": "brownrichards",
-    "email": "harper.brownrichards@vhhscougars.org"
-  },
-  {
-    "name": "Kennedy Cohen",
-    "first": "kennedy",
-    "last": "cohen",
-    "email": "kennedy.cohen@vhhscougars.org"
-  },
-  {
-    "name": "Lexi Dove",
-    "first": "lexi",
-    "last": "dove",
-    "email": "lexi.dove@vhhscougars.org"
-  },
-  {
-    "name": "Alyson Eric",
-    "first": "alyson",
-    "last": "eric",
-    "email": "alyson.eric@vhhscougars.org"
-  },
-  {
-    "name": "Caitlyn Feldman",
-    "first": "caitlyn",
-    "last": "feldman",
-    "email": "caitlyn.feldman@vhhscougars.org"
-  },
-  {
-    "name": "Carmelo Ferro",
-    "first": "carmelo",
-    "last": "ferro",
-    "email": "carmelo.ferro@vhhscougars.org"
-  },
-  {
-    "name": "Patricia Fitzgerald",
-    "first": "patricia",
-    "last": "fitzgerald",
-    "email": "patricia.fitzgerald@vhhscougars.org"
-  },
-  {
-    "name": "Noah Gonzalez",
-    "first": "noah",
-    "last": "gonzalez",
-    "email": "noah.gonzalez@vhhscougars.org"
-  },
-  {
-    "name": "Aubree Kaiser",
-    "first": "aubree",
-    "last": "kaiser",
-    "email": "aubree.kaiser@vhhscougars.org"
-  },
-  {
-    "name": "Autumn Kim",
-    "first": "autumn",
-    "last": "kim",
-    "email": "autumn.kim@vhhscougars.org"
-  },
-  {
-    "name": "Aidend Kim",
-    "first": "aidend",
-    "last": "kim",
-    "email": "aidend.kim@vhhscougars.org"
-  },
-  {
-    "name": "Owen Ku",
-    "first": "owen",
-    "last": "ku",
-    "email": "owen.ku@vhhscougars.org"
-  },
-  {
-    "name": "Evelyn Lai",
-    "first": "evelyn",
-    "last": "lai",
-    "email": "evelyn.lai@vhhscougars.org"
-  },
-  {
-    "name": "Ava Leontiev",
-    "first": "ava",
-    "last": "leontiev",
-    "email": "ava.leontiev@vhhscougars.org"
-  },
-  {
-    "name": "Kayla Levy",
-    "first": "kayla",
-    "last": "levy",
-    "email": "kayla.levy@vhhscougars.org"
-  },
-  {
-    "name": "Yahli Marx",
-    "first": "yahli",
-    "last": "marx",
-    "email": "yahli.marx@vhhscougars.org"
-  },
-  {
-    "name": "Bryn Mcauliffe",
-    "first": "bryn",
-    "last": "mcauliffe",
-    "email": "bryn.mcauliffe@vhhscougars.org"
-  },
-  {
-    "name": "Sophie Moustakis",
-    "first": "sophie",
-    "last": "moustakis",
-    "email": "sophie.moustakis@vhhscougars.org"
-  },
-  {
-    "name": "Summer Oneal",
-    "first": "summer",
-    "last": "oneal",
-    "email": "summer.oneal@vhhscougars.org"
-  },
-  {
-    "name": "Lila Parker",
-    "first": "lila",
-    "last": "parker",
-    "email": "lila.parker@vhhscougars.org"
-  },
-  {
-    "name": "Leilany Rackley",
-    "first": "leilany",
-    "last": "rackley",
-    "email": "leilany.rackley@vhhscougars.org"
-  },
-  {
-    "name": "Vanessa Ramirez",
-    "first": "vanessa",
-    "last": "ramirez",
-    "email": "vanessa.ramirez@vhhscougars.org"
-  },
-  {
-    "name": "Viviana Ramirez",
-    "first": "viviana",
-    "last": "ramirez",
-    "email": "viviana.ramirez@vhhscougars.org"
-  },
-  {
-    "name": "Cindy Rodriguez",
-    "first": "cindy",
-    "last": "rodriguez",
-    "email": "cindy.rodriguez@vhhscougars.org"
-  },
-  {
-    "name": "Elliana Russell",
-    "first": "elliana",
-    "last": "russell",
-    "email": "elliana.russell@vhhscougars.org"
-  },
-  {
-    "name": "Dylan Schulman",
-    "first": "dylan",
-    "last": "schulman",
-    "email": "dylan.schulman@vhhscougars.org"
-  },
-  {
-    "name": "Aria Shah",
-    "first": "aria",
-    "last": "shah",
-    "email": "aria.shah@vhhscougars.org"
-  },
-  {
-    "name": "Kendall Sobacki",
-    "first": "kendall",
-    "last": "sobacki",
-    "email": "kendall.sobacki@vhhscougars.org"
-  },
-  {
-    "name": "Clare Song",
-    "first": "clare",
-    "last": "song",
-    "email": "clare.song@vhhscougars.org"
-  },
-  {
-    "name": "Emilia Starr",
-    "first": "emilia",
-    "last": "starr",
-    "email": "emilia.starr@vhhscougars.org"
-  },
-  {
-    "name": "Danna Tellezresendiz",
-    "first": "danna",
-    "last": "tellezresendiz",
-    "email": "danna.tellezresendiz@vhhscougars.org"
-  },
-  {
-    "name": "Mia Thomas",
-    "first": "mia",
-    "last": "thomas",
-    "email": "mia.thomas@vhhscougars.org"
-  },
-  {
-    "name": "Alyssa Vela",
-    "first": "alyssa",
-    "last": "vela",
-    "email": "alyssa.vela@vhhscougars.org"
-  },
-  {
-    "name": "Maged Wali",
-    "first": "maged",
-    "last": "wali",
-    "email": "maged.wali@vhhscougars.org"
-  },
-  {
-    "name": "Paxton Walsh",
-    "first": "paxton",
-    "last": "walsh",
-    "email": "paxton.walsh@vhhscougars.org"
-  },
-  {
-    "name": "Jasmine Wascow",
-    "first": "jasmine",
-    "last": "wascow",
-    "email": "jasmine.wascow@vhhscougars.org"
-  },
-  {
-    "name": "Hope Wesley",
-    "first": "hope",
-    "last": "wesley",
-    "email": "hope.wesley@vhhscougars.org"
-  },
-  {
-    "name": "Carissa Wire",
-    "first": "carissa",
-    "last": "wire",
-    "email": "carissa.wire@vhhscougars.org"
-  },
-  {
-    "name": "Rebecca Yalovetskiy",
-    "first": "rebecca",
-    "last": "yalovetskiy",
-    "email": "rebecca.yalovetskiy@vhhscougars.org"
-  },
-  {
-    "name": "Issac Yun",
-    "first": "issac",
-    "last": "yun",
-    "email": "issac.yun@vhhscougars.org"
-  },
-  {
-    "name": "Cecillia Burt",
-    "first": "cecillia",
-    "last": "burt",
-    "email": "cecillia.burt@vhhscougars.org"
-  },
-  {
-    "name": "Anthony Loredo",
-    "first": "anthony",
-    "last": "loredo",
-    "email": "anthony.loredo@vhhscougars.org"
-  },
-  {
-    "name": "Jayla Wascow",
-    "first": "jayla",
-    "last": "wascow",
-    "email": "jayla.wascow@vhhscougars.org"
-  },
-  {
-    "name": "Skye Newman",
-    "first": "skye",
-    "last": "newman",
-    "email": "skye.newman@vhhscougars.org"
-  },
-  {
-    "name": "Layla Noble",
-    "first": "layla",
-    "last": "noble",
-    "email": "layla.noble@vhhscougars.org"
-  }
-];
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { 
+      getAuth, 
+      createUserWithEmailAndPassword, 
+      signInWithEmailAndPassword, 
+      signOut, 
+      onAuthStateChanged 
+    } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+    import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyBkeNN18CV1FnPgRscYsffB7PwxUTq0qao",
+      authDomain: "attendcheck-158f1.firebaseapp.com",
+      projectId: "attendcheck-158f1",
+      storageBucket: "attendcheck-158f1.firebasestorage.app",
+      messagingSenderId: "696462223856",
+      appId: "1:696462223856:web:34cdc26e5e98f99a995535"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    let masterList = [];
     let currentMissingMembers = [];
+    let currentUser = null;
 
-    const fileInput = document.getElementById('csvFileInput');
-    const fileNameDiv = document.getElementById('fileName');
+    function capitalizeWord(str) {
+      if (!str) return '';
+      return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
+    }
 
-    fileInput.addEventListener('change', (e) => {
+    function capitalizeName(str) {
+      if (!str) return '';
+      return str.split(' ').map(capitalizeWord).join(' ');
+    }
+
+    function parseEmailToMember(emailStr) {
+      const cleanEmail = emailStr.trim().toLowerCase();
+      const username = cleanEmail.split('@')[0];
+      const parts = username.split('.');
+      
+      const rawFirst = parts[0] || '';
+      const rawLast = parts.slice(1).join(' ') || '';
+
+      const first = capitalizeName(rawFirst);
+      const last = capitalizeName(rawLast);
+      const fullName = `${first} ${last}`.trim() || cleanEmail;
+
+      return {
+        email: cleanEmail,
+        first: first,
+        last: last,
+        name: fullName
+      };
+    }
+
+    function formatAuthError(errorCode) {
+      switch (errorCode) {
+        case 'auth/invalid-credential':
+        case 'auth/user-not-found':
+        case 'auth/wrong-password':
+          return 'Incorrect email or password. Please check your credentials.';
+        case 'auth/email-already-in-use':
+          return 'An account with this email address already exists. Please log in.';
+        case 'auth/weak-password':
+          return 'Password must be at least 6 characters long.';
+        case 'auth/invalid-email':
+          return 'Please enter a valid email address.';
+        default:
+          return 'Authentication error. Please check your details and try again.';
+      }
+    }
+
+    function clearAttendanceResults() {
+      const fileElem = document.getElementById('fileName');
+      fileElem.textContent = 'No file selected';
+      fileElem.classList.add('empty');
+      
+      document.getElementById('statsSection').style.display = 'none';
+      document.getElementById('resultsHeader').style.display = 'none';
+      document.getElementById('results').innerHTML = '';
+      document.getElementById('csvFileInput').value = '';
+      currentMissingMembers = [];
+    }
+
+    onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        currentUser = user;
+        document.getElementById('authSection').style.display = 'none';
+        
+        const snap = await getDoc(doc(db, "clubs", user.uid));
+        if (snap.exists() && snap.data().members && snap.data().members.length > 0) {
+          masterList = snap.data().members;
+          showDashboard(user.email);
+        } else {
+          document.getElementById('onboardingSection').style.display = 'block';
+          document.getElementById('appDashboard').style.display = 'none';
+        }
+      } else {
+        currentUser = null;
+        masterList = [];
+        clearAttendanceResults();
+        document.getElementById('authSection').style.display = 'block';
+        document.getElementById('onboardingSection').style.display = 'none';
+        document.getElementById('appDashboard').style.display = 'none';
+      }
+    });
+
+    function showDashboard(email) {
+      document.getElementById('onboardingSection').style.display = 'none';
+      document.getElementById('appDashboard').style.display = 'block';
+      document.getElementById('userGreeting').textContent = `Account: ${email}`;
+      document.getElementById('rosterCount').textContent = `Full Club List: ${masterList.length} members loaded`;
+      clearAttendanceResults();
+    }
+
+    document.getElementById('loginBtn').addEventListener('click', handleLogin);
+    document.getElementById('authForm').addEventListener('submit', (e) => {
+      e.preventDefault();
+      handleLogin();
+    });
+
+    function handleLogin() {
+      const email = document.getElementById('authEmail').value;
+      const password = document.getElementById('authPassword').value;
+      document.getElementById('authError').textContent = '';
+
+      if (!email || !password) {
+        document.getElementById('authError').textContent = 'Please enter both email and password.';
+        return;
+      }
+
+      signInWithEmailAndPassword(auth, email, password).catch((error) => {
+        document.getElementById('authError').textContent = formatAuthError(error.code);
+      });
+    }
+
+    document.getElementById('signupBtn').addEventListener('click', () => {
+      const email = document.getElementById('authEmail').value;
+      const password = document.getElementById('authPassword').value;
+      document.getElementById('authError').textContent = '';
+
+      if (!email || !password) {
+        document.getElementById('authError').textContent = 'Please enter both email and password.';
+        return;
+      }
+
+      createUserWithEmailAndPassword(auth, email, password).catch((error) => {
+        document.getElementById('authError').textContent = formatAuthError(error.code);
+      });
+    });
+
+    document.getElementById('logoutBtn').addEventListener('click', () => signOut(auth));
+
+    function processAndSaveRoster(file, onSuccess) {
+      Papa.parse(file, {
+        header: false,
+        skipEmptyLines: true,
+        complete: async (results) => {
+          const parsedMembers = [];
+          
+          results.data.forEach(row => {
+            const rowText = Array.isArray(row) ? row.join(' ') : Object.values(row).join(' ');
+            const emailMatch = rowText.match(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/);
+            
+            if (emailMatch) {
+              parsedMembers.push(parseEmailToMember(emailMatch[0]));
+            }
+          });
+
+          if (parsedMembers.length === 0) {
+            alert('No valid member emails found in the uploaded CSV file.');
+            return;
+          }
+
+          masterList = parsedMembers;
+
+          await setDoc(doc(db, "clubs", currentUser.uid), { 
+            members: masterList, 
+            updatedAt: new Date() 
+          });
+
+          if (onSuccess) onSuccess();
+        }
+      });
+    }
+
+    document.getElementById('initialRosterInput').addEventListener('change', (e) => {
       const file = e.target.files[0];
       if (file) {
-        fileNameDiv.textContent = file.name;
+        const nameElem = document.getElementById('initialRosterName');
+        nameElem.textContent = file.name;
+        nameElem.classList.remove('empty');
+        processAndSaveRoster(file, () => {
+          showDashboard(currentUser.email);
+        });
+      }
+    });
+
+    document.getElementById('updateRosterInput').addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (file) {
+        processAndSaveRoster(file, () => {
+          alert(`Full club list successfully updated! Saved ${masterList.length} members.`);
+          document.getElementById('rosterCount').textContent = `Full Club List: ${masterList.length} members loaded`;
+        });
+      }
+    });
+
+    document.getElementById('csvFileInput').addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (file) {
+        document.getElementById('results').innerHTML = '';
+        const nameElem = document.getElementById('fileName');
+        nameElem.textContent = file.name;
+        nameElem.classList.remove('empty');
+        
         Papa.parse(file, {
+          header: false,
           skipEmptyLines: true,
-          complete: (results) => checkMissing(results.data)
+          complete: (results) => {
+            checkMissing(results.data);
+            document.getElementById('csvFileInput').value = '';
+          }
         });
       }
     });
@@ -418,13 +433,21 @@
     }
 
     function checkMissing(csvRows) {
-      const rowStrings = csvRows.map(row => {
+      if (!masterList || masterList.length === 0) {
+        alert('No full club list found. Please upload your full club list first.');
+        return;
+      }
+
+      const attendeeRows = csvRows.map(row => {
+        let text = '';
         if (Array.isArray(row)) {
-          return cleanStr(row.join(' '));
+          text = row.join(' ');
         } else if (typeof row === 'object' && row !== null) {
-          return cleanStr(Object.values(row).join(' '));
+          text = Object.values(row).join(' ');
+        } else {
+          text = String(row);
         }
-        return cleanStr(row);
+        return cleanStr(text);
       });
 
       currentMissingMembers = [];
@@ -434,25 +457,25 @@
         const mFirst = cleanStr(member.first);
         const mLast = cleanStr(member.last);
         const mEmail = cleanStr(member.email);
-        const mName = cleanStr(member.name);
-
-        const mFirstShort = mFirst.length >= 4 ? mFirst.slice(0, 4) : mFirst;
-        const mLastShort = mLast.length >= 4 ? mLast.slice(0, 4) : mLast;
 
         let found = false;
 
-        for (const rowText of rowStrings) {
+        for (const rowText of attendeeRows) {
           if (!rowText) continue;
 
-          if (rowText.includes(mEmail) || rowText.includes(mName)) {
+          if (mEmail && rowText.includes(mEmail)) {
             found = true;
             break;
           }
 
-          const firstMatch = rowText.includes(mFirst) || (mFirstShort && rowText.includes(mFirstShort));
-          const lastMatch = rowText.includes(mLast) || (mLastShort && rowText.includes(mLastShort));
+          if (mFirst && mLast && rowText.includes(mFirst) && rowText.includes(mLast)) {
+            found = true;
+            break;
+          }
 
-          if (firstMatch && lastMatch) {
+          const fPrefix = mFirst.substring(0, Math.min(4, mFirst.length));
+          const lPrefix = mLast.substring(0, Math.min(4, mLast.length));
+          if (fPrefix.length >= 3 && lPrefix.length >= 3 && rowText.includes(fPrefix) && rowText.includes(lPrefix)) {
             found = true;
             break;
           }
@@ -465,17 +488,15 @@
         }
       });
 
-      // Update Visual Indicators
       const totalMembers = masterList.length;
       const missingCount = currentMissingMembers.length;
-      const rate = Math.round((presentCount / totalMembers) * 100);
+      const rate = totalMembers > 0 ? Math.round((presentCount / totalMembers) * 100) : 0;
 
       document.getElementById('statPresent').textContent = presentCount;
       document.getElementById('statMissing').textContent = missingCount;
       document.getElementById('statRate').textContent = rate + '%';
       document.getElementById('statsSection').style.display = 'flex';
 
-      // Update List
       const resultsUl = document.getElementById('results');
       resultsUl.innerHTML = '';
       document.getElementById('count').textContent = missingCount;
@@ -483,21 +504,20 @@
 
       if (missingCount === 0) {
         const li = document.createElement('li');
-        li.textContent = 'All 49 Student Council members are present!';
-        li.style.color = '#2e7d32';
+        li.textContent = `All ${totalMembers} club members are present!`;
+        li.style.color = 'var(--olive-dark)';
         resultsUl.appendChild(li);
         document.getElementById('openEmailModalBtn').style.display = 'none';
       } else {
         document.getElementById('openEmailModalBtn').style.display = 'inline-block';
         currentMissingMembers.forEach(member => {
           const li = document.createElement('li');
-          li.innerHTML = `<span>${member.name}</span><span style="font-size: 0.85rem; color: #777;">${member.email}</span>`;
+          li.innerHTML = `<span>${member.name}</span><span style="font-size: 0.85rem; color: var(--text-muted); font-weight: 500;">${member.email}</span>`;
           resultsUl.appendChild(li);
         });
       }
     }
 
-    // Modal Control
     document.getElementById('openEmailModalBtn').addEventListener('click', () => {
       const checklistContainer = document.getElementById('modalChecklist');
       checklistContainer.innerHTML = '';
@@ -508,8 +528,8 @@
         div.innerHTML = `
           <input type="checkbox" value="${member.email}" id="chk_${idx}" checked>
           <div>
-            <strong>${member.name}</strong>
-            <div style="font-size: 0.8rem; color: #666;">${member.email}</div>
+            <strong style="color: var(--text-dark);">${member.name}</strong>
+            <div style="font-size: 0.8rem; color: var(--text-muted); font-weight: 500;">${member.email}</div>
           </div>
         `;
         checklistContainer.appendChild(div);
@@ -518,11 +538,11 @@
       document.getElementById('emailModal').style.display = 'flex';
     });
 
-    function closeModal() {
+    document.getElementById('closeModalBtn').addEventListener('click', () => {
       document.getElementById('emailModal').style.display = 'none';
-    }
+    });
 
-    function sendGmail() {
+    document.getElementById('sendEmailBtn').addEventListener('click', () => {
       const checkboxes = document.querySelectorAll('#modalChecklist input[type="checkbox"]:checked');
       const selectedEmails = Array.from(checkboxes).map(cb => cb.value);
 
@@ -532,13 +552,13 @@
       }
 
       const bccString = selectedEmails.join(',');
-      const subject = encodeURIComponent('Missing Student Council Meeting');
-      const body = encodeURIComponent('Hi,\n\nOur records show that you missed today\'s Student Council meeting. Please reach out if you have an excused absence.\n\nBest,\nStudent Council');
+      const subject = encodeURIComponent('Missing Club Meeting');
+      const body = encodeURIComponent('Hi,\n\nOur records show that you missed today\'s club meeting. Please reach out if you have an excused absence.\n\nBest,\nClub Advisor');
 
       const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&bcc=${bccString}&su=${subject}&body=${body}`;
       window.open(gmailUrl, '_blank');
-      closeModal();
-    }
+      document.getElementById('emailModal').style.display = 'none';
+    });
   </script>
 </body>
 </html>
